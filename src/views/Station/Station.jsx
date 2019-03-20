@@ -16,15 +16,9 @@ import Update from "@material-ui/icons/Update";
 import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import AccessTime from "@material-ui/icons/AccessTime";
 import Accessibility from "@material-ui/icons/Accessibility";
-import BugReport from "@material-ui/icons/BugReport";
-import Code from "@material-ui/icons/Code";
-import Cloud from "@material-ui/icons/Cloud";
 // core components
 import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
-import Table from "components/Table/Table.jsx";
-import Tasks from "components/Tasks/Tasks.jsx";
-import CustomTabs from "components/CustomTabs/CustomTabs.jsx";
 import Danger from "components/Typography/Danger.jsx";
 import Card from "components/Card/Card.jsx";
 import CardHeader from "components/Card/CardHeader.jsx";
@@ -32,7 +26,6 @@ import CardIcon from "components/Card/CardIcon.jsx";
 import CardBody from "components/Card/CardBody.jsx";
 import CardFooter from "components/Card/CardFooter.jsx";
 
-import { bugs, website, server } from "variables/general.jsx";
 
 import {
   dailySalesChart,
@@ -69,7 +62,7 @@ class Station extends React.Component {
     axios.get('https://cors-anywhere.herokuapp.com/https://feeds.citibikenyc.com/stations/stations.json')
       .then(result => {
         console.log('results', result)  
-        const currentData = result.data.stationBeanList.filter(station => station.id == stationIdQuery)[0]
+        const currentData = result.data.stationBeanList.filter(station => String(station.id) === String(stationIdQuery))[0]
         console.log('currentData', currentData)
         if (currentData) {
           this.setState({

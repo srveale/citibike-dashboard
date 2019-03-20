@@ -506,3 +506,9 @@ footer ul li a:hover {
   right: auto;
   left: 80px;
 }
+
+.leaflet-container {
+  height: 500px;
+  width: 100%;
+  margin: 0 auto;
+}
