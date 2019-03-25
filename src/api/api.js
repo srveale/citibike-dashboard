@@ -25,3 +25,10 @@ export function fetchRecent (stationIdQuery) {
 		return pastTwoHours;
 	})
 }
+
+export function fetchWeather () {
+	return axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=41&lon=-74&appid=516a3b4a9edf4219fe0e86d9c6ae1965`)
+	.then(weatherResult => {
+		return weatherResult.data;
+	})
+}

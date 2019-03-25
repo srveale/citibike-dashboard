@@ -1,5 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
+import queryString from 'query-string';
+
 // react plugin for creating charts
 import ChartistGraph from "react-chartist";
 // @material-ui/core
@@ -32,6 +34,10 @@ import CardFooter from "components/Card/CardFooter.jsx";
 
 import { bugs, website, server } from "variables/general.jsx";
 
+import { fetchRecent, fetchRealtime, fetchWeather } from '../../api/api';
+
+
+
 import {
   dailySalesChart,
   emailsSubscriptionChart,
@@ -40,19 +46,57 @@ import {
 
 import dashboardStyle from "assets/jss/material-dashboard-react/views/dashboardStyle.jsx";
 
+const toFahrenheit = (kelvin) => {
+  return Math.round(kelvin * 9/5 - 459.67, 0)
+}
+
 class Dashboard extends React.Component {
   state = {
-    value: 0
+    value: 0,
+    currentData: [],
+    pastTwoHours: {
+      data: {
+        labels: [],
+        series: [],
+      },
+      logs: []
+    },
+    weatherData: {
+      main: {},
+      weather: [{}],
+    },
+    isLoading: true,
   };
-  handleChange = (event, value) => {
-    this.setState({ value });
-  };
+  async componentDidMount() {
+    this.setState({ isLoading: true });
+    const parsed = queryString.parse(this.props.location.search);
+    const stationIdQuery = parsed.station;
 
-  handleChangeIndex = index => {
-    this.setState({ value: index });
-  };
+    // Get data from citibike realtime API and our API
+    const apiResults = await Promise.all([fetchRecent(stationIdQuery), fetchRealtime(), fetchWeather()])
+    const [pastTwoHours, currentData, weatherData] = apiResults;
+
+    console.log('currentData', currentData)
+
+    this.setState({
+      currentData,
+      pastTwoHours,
+      weatherData,
+      isLoading: false,
+    })
+  }
+
   render() {
+    if (this.state.isLoading) {
+      return (
+        <div>Loading</div>
+      )
+    }
     const { classes } = this.props;
+    const { currentData, pastTwoHours, weatherData } = this.state;
+    const inServiceStations = currentData.filter(station => station.statusValue === "In Service");
+    const currentEmptyStations = inServiceStations.filter(station => station.availableBikes === 0);
+    console.log('currentEmptyStations', currentEmptyStations)
     return (
       <div>
         <GridContainer>
@@ -62,9 +106,9 @@ class Dashboard extends React.Component {
                 <CardIcon color="warning">
                   <Icon>content_copy</Icon>
                 </CardIcon>
-                <p className={classes.cardCategory}>Station Capacity</p>
+                <p className={classes.cardCategory}>Empty Stations</p>
                 <h3 className={classes.cardTitle}>
-                  22/30
+                  {currentEmptyStations.length}/{currentData.length}
                 </h3>
               </CardHeader>
               <CardFooter stats>
@@ -254,20 +298,21 @@ class Dashboard extends React.Component {
           <GridItem xs={12} sm={12} md={6}>
             <Card>
               <CardHeader color="warning">
-                <h4 className={classes.cardTitleWhite}>Employees Stats</h4>
+                <h4 className={classes.cardTitleWhite}>Current Weather</h4>
                 <p className={classes.cardCategoryWhite}>
-                  New employees on 15th September, 2016
+                  {String(new Date())}
                 </p>
               </CardHeader>
               <CardBody>
                 <Table
                   tableHeaderColor="warning"
-                  tableHead={["ID", "Name", "Salary", "Country"]}
                   tableData={[
-                    ["1", "Dakota Rice", "$36,738", "Niger"],
-                    ["2", "Minerva Hooper", "$23,789", "Curaçao"],
-                    ["3", "Sage Rodriguez", "$56,142", "Netherlands"],
-                    ["4", "Philip Chaney", "$38,735", "Korea, South"]
+                    ["Conditions", weatherData.weather[0].description, "", ""],
+                    ["Temperature (°F)", 
+                      "current: " + String(toFahrenheit(weatherData.main.temp)),
+                      "high: " + String(toFahrenheit(weatherData.main.temp_max)),
+                      "low: " + String(toFahrenheit(weatherData.main.temp_min))],
+                    ["Windspeed (m/s)", String(weatherData.wind.speed), "", ""],
                   ]}
                 />
               </CardBody>

@@ -25,7 +25,7 @@ const dailySalesChart = {
       tension: 0
     }),
     low: 0,
-    high: 50, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
+    high: 60, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
     chartPadding: {
       top: 0,
       right: 0,
@@ -72,27 +72,39 @@ const dailySalesChart = {
 const emailsSubscriptionChart = {
   data: {
     labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "Mai",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec"
+      "00:00",
+      "",
+      "",
+      "03:00",
+      "",
+      "",
+      "06:00",
+      "",
+      "",
+      "09:00",
+      "",
+      "",
+      "12:00",
+      "",
+      "",
+      "15:00",
+      "",
+      "",
+      "18:00",
+      "",
+      "",
+      "21:00",
+      "",
+      "",
     ],
-    series: [[542, 443, 320, 780, 553, 453, 326, 434, 568, 610, 756, 895]]
+    series: [[9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]]
   },
   options: {
     axisX: {
       showGrid: false
     },
     low: 0,
-    high: 1000,
+    high: 60,
     chartPadding: {
       top: 0,
       right: 5,

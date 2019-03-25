@@ -16,31 +16,30 @@ class Maps extends React.Component {
     loading: true,
     currentData: {
       logs: [],
-    }
+    },
+    isLoading: true
   }
 
   async componentDidMount(){
     const parsed = queryString.parse(this.props.location.search);
     const stationIdQuery = parsed.station;
 
-    this.setState({ loading: true })
-    const pastTwoHours = await fetchRecent(stationIdQuery);
-    const currentData = await fetchRealtime();
+    const apiResults = await Promise.all([fetchRecent(stationIdQuery), fetchRealtime()]);
+    const [pastTwoHours, currentData] = apiResults;
+    
     this.setState({
       pastTwoHours,
       currentData,
-      loading: false
+      isLoading: false
     })
   }
 
   render() {
-    if (this.state.loading) {
+    if (this.state.isLoading) {
       return (
         <div>Loading</div>
       )
     }
-
-
 
     const position = [this.state.lat, this.state.lng]
     const url = "http://b.tile.osm.org/{z}/{x}/{y}.png";
@@ -62,7 +61,7 @@ class Maps extends React.Component {
           const perc = Math.round(station.availableBikes / station.totalDocks * 100)
           const icon = L.divIcon({
             className: 'custom-icon',
-            html: ReactDOMServer.renderToString(<Icon perc={perc}/>)
+            html: ReactDOMServer.renderToString(<Icon perc={perc} availableBikes={station.availableBikes} totalDocks={station.totalDocks}/>)
           });
           const stationLocation = [station.latitude, station.longitude];
           return (
