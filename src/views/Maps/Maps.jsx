@@ -1,27 +1,51 @@
 import React from "react";
-
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
+import queryString from 'query-string';
+import L from 'leaflet';
+import Icon from './Icon';
+import ReactDOMServer from 'react-dom/server';
 
-const long2tile = (lon,zoom) => (Math.floor((lon+180)/360*Math.pow(2,zoom)));
-const lat2tile = (lat,zoom) => (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom)));
+import { fetchRecent, fetchRealtime } from '../../api/api';
+
 
 class Maps extends React.Component {
   state = {
     lat: 40.7128,
     lng: -74.0060,
-    zoom: 12,
+    zoom: 14,
+    loading: true,
+    currentData: {
+      logs: [],
+    }
+  }
+
+  async componentDidMount(){
+    const parsed = queryString.parse(this.props.location.search);
+    const stationIdQuery = parsed.station;
+
+    this.setState({ loading: true })
+    const pastTwoHours = await fetchRecent(stationIdQuery);
+    const currentData = await fetchRealtime();
+    this.setState({
+      pastTwoHours,
+      currentData,
+      loading: false
+    })
   }
 
   render() {
+    if (this.state.loading) {
+      return (
+        <div>Loading</div>
+      )
+    }
+
+
+
     const position = [this.state.lat, this.state.lng]
-
-    console.log('position', position)
-
-    const tilelong = long2tile(this.state.lng, this.state.zoom)
-    const tileLat = lat2tile(this.state.lat, this.state.zoom)
-    console.log(tilelong, tileLat)
     const url = "http://b.tile.osm.org/{z}/{x}/{y}.png";
-    // const url = `https://api.mapbox.com/v4/mapbox.streets/${this.state.zoom}/${tilelong}/${tileLat}@2x.png?access_token=pk.eyJ1Ijoic3J2ZWFsZSIsImEiOiJjanMwdDV5eW4wcjFiNGFtZ3ZjamgxZHU3In0.DIhnZPEkQ_1NwdP4NNbgcA`
+    const stations = this.state.currentData;
+    console.log('stations', stations)
     return (
       <Map center={position} zoom={this.state.zoom} style={{ width: '100%', height: '800px' }}>
         <TileLayer
@@ -34,11 +58,22 @@ class Maps extends React.Component {
             <a href=\"https://www.digitalglobe.com/\" target=\"_blank\">© DigitalGlobe</a>'
           url={url}
         />
-        <Marker position={position}>
-          <Popup>
-            A pretty CSS3 popup. <br /> Easily customizable.
-          </Popup>
-        </Marker>
+        { stations.map(station => {
+          const perc = Math.round(station.availableBikes / station.totalDocks * 100)
+          const icon = L.divIcon({
+            className: 'custom-icon',
+            html: ReactDOMServer.renderToString(<Icon perc={perc}/>)
+          });
+          const stationLocation = [station.latitude, station.longitude];
+          return (
+            <Marker position={stationLocation} key={station.id} icon={icon}>
+              <Popup style={{color:"red"}}>
+                <a href={`/admin/station?station=${station.id}`}>{station.stationName}</a>
+              </Popup>
+            </Marker>
+          )
+        })
+        }
       </Map>
     )
   }

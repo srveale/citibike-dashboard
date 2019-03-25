@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
+
 // react plugin for creating charts
 import ChartistGraph from "react-chartist";
 // @material-ui/core
-import axios from 'axios';
 import queryString from 'query-string';
 import withStyles from "@material-ui/core/styles/withStyles";
 import Icon from "@material-ui/core/Icon";
@@ -26,11 +26,12 @@ import CardIcon from "components/Card/CardIcon.jsx";
 import CardBody from "components/Card/CardBody.jsx";
 import CardFooter from "components/Card/CardFooter.jsx";
 
+import { fetchRecent, fetchRealtime } from '../../api/api';
+
 
 import {
   dailySalesChart,
   emailsSubscriptionChart,
-  completedTasksChart
 } from "variables/charts.jsx";
 
 import dashboardStyle from "assets/jss/material-dashboard-react/views/dashboardStyle.jsx";
@@ -38,47 +39,40 @@ import dashboardStyle from "assets/jss/material-dashboard-react/views/dashboardS
 class Station extends React.Component {
   state = {
     value: 0,
-    currentData:{
+    currentData: {
       availableBikes: 0,
       totalDocks: 0,
       stationName: "No Station Selected"
+    },
+    pastTwoHours: {
+      data: {
+        labels: [],
+        series: [],
+      },
+      logs: []
     }
   };
-  handleChange = (event, value) => {
-    this.setState({ value });
-  };
-
-  handleChangeIndex = index => {
-    this.setState({ value: index });
-  };
-  componentDidMount(){
+  async componentDidMount() {
     this.setState({ isLoading: true });
-
-    console.log('this.props', this.props)
     const parsed = queryString.parse(this.props.location.search);
     const stationIdQuery = parsed.station;
-    console.log('stationIdQuery', stationIdQuery)
 
-    axios.get('https://cors-anywhere.herokuapp.com/https://feeds.citibikenyc.com/stations/stations.json')
-      .then(result => {
-        console.log('results', result)  
-        const currentData = result.data.stationBeanList.filter(station => String(station.id) === String(stationIdQuery))[0]
-        console.log('currentData', currentData)
-        if (currentData) {
-          this.setState({
-            currentData,
-            isLoading: false,
-          })
-        } else {
-          this.setState({
-            isLoading: false
-          })
-        }
-      })
-      .catch(error => this.setState({
-        error,
+    // Get data from citibike realtime API and our API
+    const pastTwoHours = await fetchRecent(stationIdQuery);
+    const currentData = await fetchRealtime(stationIdQuery);
+
+    if (currentData) {
+      this.setState({
+        currentData,
+        pastTwoHours,
         isLoading: false,
-      }))
+      })
+    } else {
+      this.setState({
+        pastTwoHours,
+        isLoading: false
+      })
+    } 
   }
 
   render() {
@@ -170,19 +164,19 @@ class Station extends React.Component {
           </GridItem>
         </GridContainer>
         <GridContainer>
-          <GridItem xs={12} sm={12} md={4}>
+          <GridItem xs={12} sm={12} md={6}>
             <Card chart>
               <CardHeader color="success">
                 <ChartistGraph
                   className="ct-chart"
-                  data={dailySalesChart.data}
+                  data={this.state.pastTwoHours.data}
                   type="Line"
                   options={dailySalesChart.options}
                   listener={dailySalesChart.animation}
                 />
               </CardHeader>
               <CardBody>
-                <h4 className={classes.cardTitle}>Available Bikes</h4>
+                <h4 className={classes.cardTitle}>Available Bikes (Past 2 Hours)</h4>
                 <p className={classes.cardCategory}>
                   <span className={classes.successText}>
                     <ArrowUpward className={classes.upArrowCardCategory} /> 55%
@@ -197,7 +191,7 @@ class Station extends React.Component {
               </CardFooter>
             </Card>
           </GridItem>
-          <GridItem xs={12} sm={12} md={4}>
+          <GridItem xs={12} sm={12} md={6}>
             <Card chart>
               <CardHeader color="warning">
                 <ChartistGraph
@@ -211,30 +205,6 @@ class Station extends React.Component {
               </CardHeader>
               <CardBody>
                 <h4 className={classes.cardTitle}>Email Subscriptions</h4>
-                <p className={classes.cardCategory}>
-                  Last Campaign Performance
-                </p>
-              </CardBody>
-              <CardFooter chart>
-                <div className={classes.stats}>
-                  <AccessTime /> campaign sent 2 days ago
-                </div>
-              </CardFooter>
-            </Card>
-          </GridItem>
-          <GridItem xs={12} sm={12} md={4}>
-            <Card chart>
-              <CardHeader color="danger">
-                <ChartistGraph
-                  className="ct-chart"
-                  data={completedTasksChart.data}
-                  type="Line"
-                  options={completedTasksChart.options}
-                  listener={completedTasksChart.animation}
-                />
-              </CardHeader>
-              <CardBody>
-                <h4 className={classes.cardTitle}>Completed Tasks</h4>
                 <p className={classes.cardCategory}>
                   Last Campaign Performance
                 </p>
