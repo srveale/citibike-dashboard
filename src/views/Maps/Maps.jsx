@@ -5,7 +5,7 @@ import L from 'leaflet';
 import Icon from './Icon';
 import ReactDOMServer from 'react-dom/server';
 
-import { fetchRecent, fetchRealtime } from '../../api/api';
+import { fetchRecent, fetchRealtime, fetchHourlyAverage } from '../../api/api';
 
 
 class Maps extends React.Component {
@@ -17,7 +17,7 @@ class Maps extends React.Component {
     currentData: {
       logs: [],
     },
-    isLoading: true
+    isLoading: true,
   }
 
   async componentDidMount(){
@@ -26,7 +26,7 @@ class Maps extends React.Component {
 
     const apiResults = await Promise.all([fetchRecent(stationIdQuery), fetchRealtime()]);
     const [pastTwoHours, currentData] = apiResults;
-    
+
     this.setState({
       pastTwoHours,
       currentData,

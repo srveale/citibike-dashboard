@@ -28,7 +28,7 @@ import CardBody from "components/Card/CardBody.jsx";
 import CardFooter from "components/Card/CardFooter.jsx";
 
 
-import { fetchRecent, fetchRealtime } from '../../api/api';
+import { fetchRecent, fetchRealtime, fetchHourlyAverage } from '../../api/api';
 
 
 import {
@@ -54,7 +54,13 @@ class Station extends React.Component {
         series: [],
       },
       logs: []
-    }
+    },
+    hourlyAverage: {
+      data: {
+        labels: ["00:00","03:00","06:00","09:00","12:00","15:00","18:00","21:00"],
+        series: [],
+      }
+    },
   };
   async componentDidMount() {
     this.setState({ isLoading: true });
@@ -62,18 +68,25 @@ class Station extends React.Component {
     const stationIdQuery = parsed.station || 72;
 
     // Get data from citibike realtime API and our API
-    const apiResults = await Promise.all([fetchRecent(stationIdQuery), fetchRealtime(stationIdQuery)])
-    const [pastTwoHours, currentData] = apiResults;
+    const apiResults = await Promise.all([
+      fetchRecent(stationIdQuery), 
+      fetchRealtime(stationIdQuery), 
+      fetchHourlyAverage()
+    ])
+    const [pastTwoHours, currentData, hourlyAverage] = apiResults;
+    console.log('apiResults', apiResults);
 
     if (currentData) {
       this.setState({
         currentData,
         pastTwoHours,
+        hourlyAverage,
         isLoading: false,
       })
     } else {
       this.setState({
         pastTwoHours,
+        hourlyAverage,
         isLoading: false
       })
     } 
@@ -201,7 +214,7 @@ class Station extends React.Component {
               <CardHeader color="warning">
                 <ChartistGraph
                   className="ct-chart"
-                  data={emailsSubscriptionChart.data}
+                  data={this.state.hourlyAverage.data}
                   type="Bar"
                   options={emailsSubscriptionChart.options}
                   responsiveOptions={emailsSubscriptionChart.responsiveOptions}
