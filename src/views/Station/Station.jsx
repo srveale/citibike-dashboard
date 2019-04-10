@@ -17,6 +17,8 @@ import Update from "@material-ui/icons/Update";
 import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import AccessTime from "@material-ui/icons/AccessTime";
 import Accessibility from "@material-ui/icons/Accessibility";
+import BugReport from "@material-ui/icons/BugReport";
+
 // core components
 import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
@@ -26,17 +28,38 @@ import CardHeader from "components/Card/CardHeader.jsx";
 import CardIcon from "components/Card/CardIcon.jsx";
 import CardBody from "components/Card/CardBody.jsx";
 import CardFooter from "components/Card/CardFooter.jsx";
+import CustomTabs from "components/CustomTabs/CustomTabs.jsx";
 
-
-import { fetchRecent, fetchRealtime, fetchHourlyAverage } from '../../api/api';
+import { fetchRecent, fetchRealtime, fetchHourlyAverage, fetchPredictions } from '../../api/api';
 
 
 import {
   dailySalesChart,
+  hour12Chart,
   emailsSubscriptionChart,
 } from "variables/charts.jsx";
 
 import dashboardStyle from "assets/jss/material-dashboard-react/views/dashboardStyle.jsx";
+
+const AvailabilityChart = (data, chart, classes) => (
+  <Card chart>
+    <CardHeader color="success">
+      <ChartistGraph
+        className="ct-chart"
+        data={data}
+        type="Line"
+        options={chart.options}
+        listener={chart.animation}
+      />
+    </CardHeader>
+    <CardBody>
+      <h4 className={classes.cardTitle}>Available Bikes History</h4>
+      <p className={classes.cardCategory}>
+        How many bikes were available at this station
+      </p>
+    </CardBody>
+  </Card>
+);
 
 class Station extends React.Component {
   state = {
@@ -48,7 +71,21 @@ class Station extends React.Component {
       latitude: 40.8038654,
       longitude: -73.9559308,
     },
-    pastTwoHours: {
+    past2Hours: {
+      data: {
+        labels: [],
+        series: [],
+      },
+      logs: []
+    },
+    past12Hours: {
+      data: {
+        labels: [],
+        series: [],
+      },
+      logs: []
+    },
+    past24Hours: {
       data: {
         labels: [],
         series: [],
@@ -61,6 +98,7 @@ class Station extends React.Component {
         series: [],
       }
     },
+    predictions: {},
   };
   async componentDidMount() {
     this.setState({ isLoading: true });
@@ -69,28 +107,43 @@ class Station extends React.Component {
 
     // Get data from citibike realtime API and our API
     const apiResults = await Promise.all([
-      fetchRecent(stationIdQuery), 
-      fetchRealtime(stationIdQuery), 
-      fetchHourlyAverage()
+      fetchRecent(stationIdQuery, 2),
+      fetchRecent(stationIdQuery, 12),
+      fetchRecent(stationIdQuery, 24),
+      fetchRealtime(stationIdQuery),
+      fetchHourlyAverage(),
+      fetchPredictions(),
     ])
-    const [pastTwoHours, currentData, hourlyAverage] = apiResults;
+    const [past2Hours, past12Hours, past24Hours, currentData, hourlyAverage, predictions] = apiResults;
     console.log('apiResults', apiResults);
 
     if (currentData) {
       this.setState({
         currentData,
-        pastTwoHours,
+        past2Hours,
+        past12Hours,
+        past24Hours,
         hourlyAverage,
+        predictions,
         isLoading: false,
       })
     } else {
       this.setState({
-        pastTwoHours,
+        past2Hours,
+        past12Hours,
+        past24Hours,
         hourlyAverage,
+        predictions,
         isLoading: false
       })
-    } 
+    }
   }
+
+  // async updateHistory(stationIdQuery, historyDuration) {
+
+  //   const past2Hours = await fetchRecent(stationIdQuery, 2);
+  //   this.setState({ past2Hours });
+  // }
 
   render() {
     if (this.state.isLoading) {
@@ -100,13 +153,25 @@ class Station extends React.Component {
     };
     const { classes } = this.props;
     console.log('this.state', this.state)
-    const {currentData} = this.state;
+    const {currentData, predictions} = this.state;
     const mapUrl = "http://b.tile.osm.org/{z}/{x}/{y}.png";
+
+    const parsed = queryString.parse(this.props.location.search);
+    const stationIdQuery = parsed.station || 72;
+
+    let emptyChance;
+
+    if (predictions[stationIdQuery]) {
+      emptyChance = Math.round(predictions[stationIdQuery]*100) + '%';
+    } else {
+      emptyChance = "Unknown";
+    }
+
     return (
       <div>
         <h2> {currentData.stationName}</h2>      
         <GridContainer>
-          <GridItem xs={12} sm={6} md={3}>
+          <GridItem xs={12} sm={6} md={6}>
             <Card>
               <CardHeader color="warning" stats icon>
                 <CardIcon color="warning">
@@ -120,57 +185,19 @@ class Station extends React.Component {
               <CardFooter stats>
                 <div className={classes.stats}>
                   <Danger>
-                    <Warning />
                   </Danger>
-                  <a href="#pablo" onClick={e => e.preventDefault()}>
-                    Get more space
-                  </a>
                 </div>
               </CardFooter>
             </Card>
           </GridItem>
-          <GridItem xs={12} sm={6} md={3}>
-            <Card>
-              <CardHeader color="success" stats icon>
-                <CardIcon color="success">
-                  <Store />
-                </CardIcon>
-                <p className={classes.cardCategory}>24-hour Trip Count</p>
-                <h3 className={classes.cardTitle}>245</h3>
-              </CardHeader>
-              <CardFooter stats>
-                <div className={classes.stats}>
-                  <DateRange />
-                  Last 24 Hours
-                </div>
-              </CardFooter>
-            </Card>
-          </GridItem>
-          <GridItem xs={12} sm={6} md={3}>
-            <Card>
-              <CardHeader color="info" stats icon>
-                <CardIcon color="info">
-                  <Accessibility />
-                </CardIcon>
-                <p className={classes.cardCategory}>Average hourly trip count</p>
-                <h3 className={classes.cardTitle}>26</h3>
-              </CardHeader>
-              <CardFooter stats>
-                <div className={classes.stats}>
-                  <Update />
-                  More Info
-                </div>
-              </CardFooter>
-            </Card>
-          </GridItem>
-          <GridItem xs={12} sm={6} md={3}>
+          <GridItem xs={12} sm={6} md={6}>
             <Card>
               <CardHeader color="danger" stats icon>
                 <CardIcon color="danger">
                   <Icon>warning</Icon>
                 </CardIcon>
-                <p className={classes.cardCategory}>Predicted bike availability 1 hour from now</p>
-                <h3 className={classes.cardTitle}>To Do</h3>
+                <p className={classes.cardCategory}>Chance that station will be empty 1 hour from now</p>
+                <h3 className={classes.cardTitle}>{emptyChance}</h3>
               </CardHeader>
               <CardFooter stats>
                 <div className={classes.stats}>
@@ -182,33 +209,35 @@ class Station extends React.Component {
           </GridItem>
         </GridContainer>
         <GridContainer>
+
           <GridItem xs={12} sm={12} md={6}>
-            <Card chart>
-              <CardHeader color="success">
-                <ChartistGraph
-                  className="ct-chart"
-                  data={this.state.pastTwoHours.data}
-                  type="Line"
-                  options={dailySalesChart.options}
-                  listener={dailySalesChart.animation}
-                />
-              </CardHeader>
-              <CardBody>
-                <h4 className={classes.cardTitle}>Available Bikes (Past 2 Hours)</h4>
-                <p className={classes.cardCategory}>
-                  <span className={classes.successText}>
-                    <ArrowUpward className={classes.upArrowCardCategory} /> 55%
-                  </span>{" "}
-                  more compared to the average for this time of day.
-                </p>
-              </CardBody>
-              <CardFooter chart>
-                <div className={classes.stats}>
-                  <AccessTime /> updated 4 minutes ago
-                </div>
-              </CardFooter>
-            </Card>
+            <CustomTabs
+              title="Time scale:"
+              headerColor="primary"
+              tabs={[
+                {
+                  tabName: "2 hours",
+                  tabContent: (
+                    AvailabilityChart(this.state.past2Hours.data, dailySalesChart, classes)
+                  )
+                },
+                {
+                  tabName: "12 hours",
+                  tabContent: (
+                    AvailabilityChart(this.state.past12Hours.data, hour12Chart, classes)
+                  )
+                },
+                {
+                  tabName: "24 hours",
+                  tabContent: (
+                    AvailabilityChart(this.state.past24Hours.data, hour12Chart, classes)
+                  )
+                },
+              ]}
+            />
           </GridItem>
+
+
           <GridItem xs={12} sm={12} md={6}>
             <Card chart>
               <CardHeader color="warning">
@@ -238,7 +267,7 @@ class Station extends React.Component {
         <GridContainer>
           <GridItem xs={12} sm={12} md={12}>
             <Map 
-              center={[this.state.currentData.latitude, this.state.currentData.longitude]} 
+              center={[currentData.latitude, currentData.longitude]} 
               zoom={15}
               style={{ width: '100%', height: '300px' }} >
               <TileLayer
@@ -251,9 +280,9 @@ class Station extends React.Component {
                   <a href=\"https://www.digitalglobe.com/\" target=\"_blank\">© DigitalGlobe</a>'
                 url={mapUrl}
               />
-              <Marker position={[this.state.currentData.latitude, this.state.currentData.longitude]}>
+              <Marker position={[currentData.latitude, currentData.longitude]}>
                 <Popup>
-                  <a href={`/admin/station?station=${this.state.currentData.id}`}>{this.state.currentData.stationName}</a>
+                  <a href={`/admin/station?station=${currentData.id}`}>{currentData.stationName}</a>
                 </Popup>
               </Marker>
             </Map>

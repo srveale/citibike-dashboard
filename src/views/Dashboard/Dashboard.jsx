@@ -34,7 +34,7 @@ import CardFooter from "components/Card/CardFooter.jsx";
 
 import { bugs, website, server } from "variables/general.jsx";
 
-import { fetchRecent, fetchRealtime, fetchWeather } from '../../api/api';
+import { fetchRecent, fetchRealtime, fetchWeather, fetchPredictions } from '../../api/api';
 
 
 
@@ -73,15 +73,15 @@ class Dashboard extends React.Component {
     const stationIdQuery = parsed.station;
 
     // Get data from citibike realtime API and our API
-    const apiResults = await Promise.all([fetchRecent(stationIdQuery), fetchRealtime(), fetchWeather()])
-    const [pastTwoHours, currentData, weatherData] = apiResults;
+    const apiResults = await Promise.all([fetchRecent(stationIdQuery), fetchRealtime(), fetchWeather(), fetchPredictions()])
+    const [pastTwoHours, currentData, weatherData, predictions] = apiResults;
 
-    console.log('currentData', currentData)
 
     this.setState({
       currentData,
       pastTwoHours,
       weatherData,
+      predictions,
       isLoading: false,
     })
   }
@@ -93,9 +93,13 @@ class Dashboard extends React.Component {
       )
     }
     const { classes } = this.props;
-    const { currentData, pastTwoHours, weatherData } = this.state;
-    const inServiceStations = currentData.filter(station => station.statusValue === "In Service");
+    const { currentData, pastTwoHours, weatherData, predictions } = this.state;
+    const inServiceStations = currentData.filter(station => {
+      return station.statusValue === "In Service" && station.availableDocks > 0;
+    });
     const currentEmptyStations = inServiceStations.filter(station => station.availableBikes === 0);
+
+    const predictedEmptyStations = Object.values(predictions).filter(pred => pred > 0.5 )
     console.log('currentEmptyStations', currentEmptyStations)
     return (
       <div>
@@ -163,8 +167,8 @@ class Dashboard extends React.Component {
                 <CardIcon color="danger">
                   <Icon>info_outline</Icon>
                 </CardIcon>
-                <p className={classes.cardCategory}>Chance of becoming empty within the next 2 hours</p>
-                <h3 className={classes.cardTitle}>6.5%</h3>
+                <p className={classes.cardCategory}>Stations predicted to be empty in 1 hour</p>
+                <h3 className={classes.cardTitle}>{predictedEmptyStations.length}</h3>
               </CardHeader>
               <CardFooter stats>
                 <div className={classes.stats}>

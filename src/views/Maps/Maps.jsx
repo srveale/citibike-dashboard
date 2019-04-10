@@ -10,6 +10,7 @@ import { fetchRecent, fetchRealtime, fetchHourlyAverage } from '../../api/api';
 
 class Maps extends React.Component {
   state = {
+    tab: 1,
     lat: 40.7128,
     lng: -74.0060,
     zoom: 14,
@@ -43,7 +44,9 @@ class Maps extends React.Component {
 
     const position = [this.state.lat, this.state.lng]
     const url = "http://b.tile.osm.org/{z}/{x}/{y}.png";
-    const stations = this.state.currentData;
+    const stations = this.state.currentData.filter(station => {
+      return station.statusValue === "In Service" && station.availableDocks > 0;
+    });;
     console.log('stations', stations)
     return (
       <Map center={position} zoom={this.state.zoom} style={{ width: '100%', height: '800px' }}>
