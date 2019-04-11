@@ -115,7 +115,6 @@ class Station extends React.Component {
       fetchPredictions(),
     ])
     const [past2Hours, past12Hours, past24Hours, currentData, hourlyAverage, predictions] = apiResults;
-    console.log('apiResults', apiResults);
 
     if (currentData) {
       this.setState({

@@ -47,7 +47,6 @@ class Maps extends React.Component {
     const stations = this.state.currentData.filter(station => {
       return station.statusValue === "In Service" && station.availableDocks > 0;
     });;
-    console.log('stations', stations)
     return (
       <Map center={position} zoom={this.state.zoom} style={{ width: '100%', height: '800px' }}>
         <TileLayer

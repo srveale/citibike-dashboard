@@ -100,7 +100,6 @@ class Dashboard extends React.Component {
     const currentEmptyStations = inServiceStations.filter(station => station.availableBikes === 0);
 
     const predictedEmptyStations = Object.values(predictions).filter(pred => pred > 0.5 )
-    console.log('currentEmptyStations', currentEmptyStations)
     return (
       <div>
         <GridContainer>

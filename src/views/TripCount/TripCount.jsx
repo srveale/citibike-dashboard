@@ -9,7 +9,7 @@ class TripCount extends React.Component {
 
   render() {
     return (
-      <iframe src="http://162.246.156.30:8080/" style={{"width": "100%", "height": "500px"}}></iframe>
+      <iframe src="https://datascience.jimkemper.site:8080/app" style={{"width": "100%", "height": "500px"}}></iframe>
     )
   }
 }
