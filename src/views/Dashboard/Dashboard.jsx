@@ -164,7 +164,7 @@ class Dashboard extends React.Component {
           </GridItem>
           <GridItem xs={12} sm={12} md={6}>
             <img 
-              style={{"width":"100%", "height": "100%"}}
+              style={{"width":"95%", "height": "75%", "opacity": "0.1"}}
               src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/USDOT_highway_sign_bicycle_symbol_-_black.svg/1280px-USDOT_highway_sign_bicycle_symbol_-_black.svg.png"
             />
           </GridItem>
