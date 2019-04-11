@@ -2,23 +2,29 @@ import React from "react";
 
 import { fetchRecent, fetchRealtime, fetchHourlyAverage } from '../../api/api';
 
+const appURLs = {
+	2016: "https://datascience.jimkemper.site:8080/app2016",
+	2017: "https://datascience.jimkemper.site:8080/app2017",
+	2018: "https://datascience.jimkemper.site:8080/app"
+}
 
 class TripCount extends React.Component {
   state = {
-  	appURL: "https://datascience.jimkemper.site:8080/app",
+  	year: 2018,
   }
 
-  updateYear(appURL) {
-  	this.setState({ appURL });
-  } 
+  updateYear(year) {
+  	this.setState({ year });
+  }
 
   render() {
     return (
     	<div>
-	    	<a href="#" onClick={() => this.updateYear("https://datascience.jimkemper.site:8080/app2016")} class="active">2016  </a>
-	    	<a href="#" onClick={() => this.updateYear("https://datascience.jimkemper.site:8080/app2017")}>2017  </a>
-	    	<a href="#" onClick={() => this.updateYear("https://datascience.jimkemper.site:8080/app")}>2018</a>
-	      <iframe src={this.state.appURL} style={{"width": "100%", "height": "500px"}}></iframe>
+	    	{this.state.year !== 2016 && <a href="#" onClick={() => this.updateYear(2016)}>2016  </a>}
+	    	{this.state.year !== 2017 && <a href="#" onClick={() => this.updateYear(2017)}>2017  </a>}
+	    	{this.state.year !== 2018 && <a href="#" onClick={() => this.updateYear(2018)}>2018  </a>}
+	    	<h3>Showing total trip counts for {this.state.year}</h3>
+	      <iframe src={appURLs[this.state.year]} style={{"width": "100%", "height": "500px"}}></iframe>
 	     </div>
     )
   }
