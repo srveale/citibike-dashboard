@@ -35,13 +35,13 @@ const dashboardRoutes = [
     component: StationPage,
     layout: "/admin"
   },
-  {
-    path: "/trip-counts",
-    name: "Trip Counts",
-    icon: ThreeDRotation,
-    component: TripCount,
-    layout: "/admin"
-  }
+  // {
+  //   path: "/trip-counts",
+  //   name: "Trip Counts",
+  //   icon: ThreeDRotation,
+  //   component: TripCount,
+  //   layout: "/admin"
+  // }
 ];
 
 export default dashboardRoutes;
