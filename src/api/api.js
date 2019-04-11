@@ -20,9 +20,9 @@ export function fetchRecent (stationIdQuery, historyDuration) {
 		${historyDuration ? `historyDuration=${String(historyDuration)}` : ""}
 		`)
 	.then(pastTwoHoursResponse => {
-		let labels = pastTwoHoursResponse.data.map(log => moment(log.executionTime).add(-6, 'hours').format('h:mm A'));
+		// Format data for use in the chart
+		let labels = pastTwoHoursResponse.data.map(log => moment(log.executionTime).add(-6, 'hours').format('h:mm'));
 		let series = [pastTwoHoursResponse.data.map(log => log.availableBikes)];
-		console.log('series.length', series[0].length)
 		if (historyDuration === 12) {
 			series = [series[0].filter((point, i) => i % 3 === 0)];
 			labels = labels.map((label, i) => i % 5 === 0 ? label : "").filter((point, i) => i % 3 === 0);
@@ -30,7 +30,6 @@ export function fetchRecent (stationIdQuery, historyDuration) {
 		if (historyDuration === 24) {
 			series = [series[0].filter((point, i) => i % 6 === 0)];
 			labels = labels.map((label, i) => i % 30 === 0 ? label : "").filter((point, i) => i % 6 === 0);
-			console.log('series.length 2', series[0].length)
 		}
 		const pastTwoHours = {
 		  data: {
